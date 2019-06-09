@@ -119,8 +119,8 @@ def create_annotations(dbpath, subset, dst):
 if __name__ == '__main__':
     #baker.run()
     dbpath = "./data/coco"
-    subset="val"
-    dst = "./data/coco/pascal_format/val"
+    subset="train"
+    dst = "./data/coco/pascal_format/train"
     create_annotations(dbpath,subset,dst)
     # json_file = "d:/data/coco/annotations_trainval2014/annotations/instances_train2014.json"
     # df =  pd.read_json(json_file)

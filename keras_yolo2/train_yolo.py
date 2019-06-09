@@ -1,21 +1,42 @@
-from keras_yolo.construct_network import  yolo_network,custom_loss
-from keras_yolo.preprocessing import parse_annotation, BatchGenerator
-from keras_yolo.utils import WeightReader,normalize
+import time
+
+from construct_network import  yolo_network,custom_loss
+from preprocessing import parse_annotation, BatchGenerator
+from utils import WeightReader,normalize
 from keras.optimizers import Adam
 import numpy as np
 import os
 from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
 
-train_image_folder = 'd:/data/coco/images/train2014/'
-train_annot_folder = 'd:/data/coco/pascal_format/train/'
-valid_image_folder = 'd:/data/coco/images/val2014/'
-valid_annot_folder = 'd:/data/coco/pascal_format/val/'
-wt_path = 'd:/data/coco/yolo.weights'
+#tf.device('/cpu:0')
+#config = tf.ConfigProto()
+#config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+#config.log_device_placement = True  # to log device placement (on which device the operation ran)
+#                                    # (nothing gets printed in Jupyter, only if you run it standalone)
+#sess = tf.Session(config=config)
+#set_session(sess)  # set this TensorFlow session as the default session for Keras
+
+
+#train_image_folder = '/kaggle/input/kerasyolov2/train2014/train2014/'
+#train_annot_folder = '/kaggle/input/kerasyolov2/pascal_format/pascal_format/train/'
+#valid_image_folder = '/kaggle/input/kerasyolov2/val2014/val2014/'
+#valid_annot_folder = '/kaggle/input/kerasyolov2/pascal_format/pascal_format/val/'
+#wt_path = '/kaggle/input/scriptsnew3/yolov2.weights'
+
+train_image_folder = './data/coco/images/train2014/'
+train_annot_folder = './data/coco/pascal_format/train/'
+valid_image_folder = './data/coco/images/val2014/'
+valid_annot_folder = './data/coco/pascal_format/val/'
+wt_path = './data/coco/yolov2.weights'
+
 weight_reader = WeightReader(wt_path)
 model = yolo_network()
 weight_reader.reset()
 nb_conv = 23
-LABELS = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+#LABELS = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+LABELS = ['person']
 IMAGE_H, IMAGE_W = 416, 416
 GRID_H,  GRID_W  = 13 , 13
 BOX              = 5
@@ -30,7 +51,7 @@ OBJECT_SCALE     = 5.0
 COORD_SCALE      = 1.0
 CLASS_SCALE      = 1.0
 
-BATCH_SIZE       = 16
+BATCH_SIZE       = 2
 WARM_UP_BATCHES  = 0
 TRUE_BOX_BUFFER  = 50
 
@@ -104,13 +125,13 @@ valid_imgs, seen_valid_labels = parse_annotation(valid_annot_folder, valid_image
 #    valid_imgs = pickle.load(fp)
 valid_batch = BatchGenerator(valid_imgs, generator_config, norm=normalize, jitter=False)
 
-early_stop = EarlyStopping(monitor='val_loss',
-                           min_delta=0.001,
-                           patience=3,
-                           mode='min',
-                           verbose=1)
+#early_stop = EarlyStopping(monitor='val_loss',
+#                           min_delta=0.001,
+#                           patience=3,
+#                           mode='min',
+#                           verbose=1)
 
-checkpoint = ModelCheckpoint('d:/data/coco/keras_yolo_weights/weights_coco.h5',
+checkpoint = ModelCheckpoint('./data/weights_coco.h5',
                              monitor='val_loss',
                              verbose=1,
                              save_best_only=False,
@@ -118,11 +139,11 @@ checkpoint = ModelCheckpoint('d:/data/coco/keras_yolo_weights/weights_coco.h5',
                              mode='min',
                              period=100)
 
-tb_counter  = len([log for log in os.listdir(os.path.expanduser('d:/data/logs/')) if 'coco_' in log]) + 1
-tensorboard = TensorBoard(log_dir=os.path.expanduser('d:/data/logs/') + 'coco_' + '_' + str(tb_counter),
-                          histogram_freq=0,
-                          write_graph=True,
-                          write_images=False)
+#tb_counter  = len([log for log in os.listdir(os.path.expanduser('./logs/')) if 'coco_' in log]) + 1
+#tensorboard = TensorBoard(log_dir=os.path.expanduser('./logs/') + 'coco_' + '_' + str(tb_counter),
+#                          histogram_freq=0,
+#                          write_graph=True,
+#                          write_images=False)
 
 optimizer = Adam(lr=0.5e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 #optimizer = SGD(lr=1e-4, decay=0.0005, momentum=0.9)
@@ -130,11 +151,18 @@ optimizer = Adam(lr=0.5e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
 model.compile(loss=custom_loss, optimizer=optimizer)
 
+print('len of train batch: ', len(train_batch))
+print('len of val batch: ', len(valid_batch))
+
+time.sleep(10)
+
 model.fit_generator(generator        = train_batch,
                     steps_per_epoch  = len(train_batch),
-                    epochs           = 100,
+                    epochs           = 10,
                     verbose          = 1,
                     validation_data  = valid_batch,
                     validation_steps = len(valid_batch),
-                    callbacks        = [early_stop, checkpoint, tensorboard],
+                    callbacks        = [checkpoint],
                     max_queue_size   = 3)
+
+print('done fitting model')

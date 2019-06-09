@@ -6,14 +6,18 @@ import imgaug as ia
 from imgaug import augmenters as iaa
 from keras.utils import Sequence
 import xml.etree.ElementTree as ET
-from keras_yolo.utils import BoundBox, normalize, bbox_iou
+from utils import BoundBox, normalize, bbox_iou
 
 
 def parse_annotation(ann_dir, img_dir, labels=[]):
+    count = 0
     all_imgs = []
     seen_labels = {}
 
     for ann in sorted(os.listdir(ann_dir)):
+        if count > 10:
+            break
+
         img = {'object': []}
 
         tree = ET.parse(ann_dir + ann)
@@ -32,6 +36,7 @@ def parse_annotation(ann_dir, img_dir, labels=[]):
                     if 'name' in attr.tag:
                         obj['name'] = attr.text
 
+                        print(obj['name'])
                         if obj['name'] in seen_labels:
                             seen_labels[obj['name']] += 1
                         else:
@@ -41,6 +46,7 @@ def parse_annotation(ann_dir, img_dir, labels=[]):
                             break
                         else:
                             img['object'] += [obj]
+                            count = count + 1
 
                     if 'bndbox' in attr.tag:
                         for dim in list(attr):

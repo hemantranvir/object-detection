@@ -1,13 +1,13 @@
 import cv2
 import os
 import matplotlib.pyplot as plt
-from keras_yolo.construct_network import yolo_network,TRUE_BOX_BUFFER,OBJ_THRESHOLD,NMS_THRESHOLD,ANCHORS,CLASS,LABELS
-from keras_yolo.utils import decode_netout, draw_boxes
+from construct_network import yolo_network,TRUE_BOX_BUFFER,OBJ_THRESHOLD,NMS_THRESHOLD,ANCHORS,CLASS,LABELS
+from utils import decode_netout, draw_boxes
 import numpy as np
 
 
 model = yolo_network()
-model.load_weights("d:/data/coco/keras_yolo_weights/weights_coco.h5")
+model.load_weights("../../test_yolov2/YOLOv2-keras/weights/weights.h5")
 
 dummy_array = np.zeros((1,1,1,1,TRUE_BOX_BUFFER,4))
 image = cv2.imread('images/giraffe.jpg')
