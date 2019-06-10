@@ -7,10 +7,10 @@ import numpy as np
 
 
 model = yolo_network()
-model.load_weights("../../test_yolov2/YOLOv2-keras/weights/weights.h5")
+model.load_weights("./data/weights_coco.h5")
 
 dummy_array = np.zeros((1,1,1,1,TRUE_BOX_BUFFER,4))
-image = cv2.imread('images/giraffe.jpg')
+image = cv2.imread('../test_yolov2/YOLOv2-keras/images/giraffe.jpg')
 
 plt.figure(figsize=(10,10))
 

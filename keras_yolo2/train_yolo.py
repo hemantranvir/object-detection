@@ -35,8 +35,8 @@ weight_reader = WeightReader(wt_path)
 model = yolo_network()
 weight_reader.reset()
 nb_conv = 23
-#LABELS = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
-LABELS = ['person']
+LABELS = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+#LABELS = ['person']
 IMAGE_H, IMAGE_W = 416, 416
 GRID_H,  GRID_W  = 13 , 13
 BOX              = 5
@@ -83,13 +83,13 @@ for i in range(1, nb_conv + 1):
         conv_layer.set_weights([kernel])
 
 
-layer   = model.layers[-4] # the last convolutional layer
-weights = layer.get_weights()
+#layer   = model.layers[-4] # the last convolutional layer
+#weights = layer.get_weights()
 
-new_kernel = np.random.normal(size=weights[0].shape)/(GRID_H*GRID_W)
-new_bias   = np.random.normal(size=weights[1].shape)/(GRID_H*GRID_W)
-
-layer.set_weights([new_kernel, new_bias])
+#new_kernel = np.random.normal(size=weights[0].shape)/(GRID_H*GRID_W)
+#new_bias   = np.random.normal(size=weights[1].shape)/(GRID_H*GRID_W)
+#
+#layer.set_weights([new_kernel, new_bias])
 
 generator_config = {
     'IMAGE_H'         : IMAGE_H,
@@ -125,25 +125,25 @@ valid_imgs, seen_valid_labels = parse_annotation(valid_annot_folder, valid_image
 #    valid_imgs = pickle.load(fp)
 valid_batch = BatchGenerator(valid_imgs, generator_config, norm=normalize, jitter=False)
 
-#early_stop = EarlyStopping(monitor='val_loss',
-#                           min_delta=0.001,
-#                           patience=3,
-#                           mode='min',
-#                           verbose=1)
+early_stop = EarlyStopping(monitor='val_loss',
+                           min_delta=0.001,
+                           patience=3,
+                           mode='min',
+                           verbose=1)
 
 checkpoint = ModelCheckpoint('./data/weights_coco.h5',
                              monitor='val_loss',
                              verbose=1,
                              save_best_only=False,
-                             save_weights_only=False,
+                             save_weights_only=True,
                              mode='min',
-                             period=100)
+                             period=5)
 
-#tb_counter  = len([log for log in os.listdir(os.path.expanduser('./logs/')) if 'coco_' in log]) + 1
-#tensorboard = TensorBoard(log_dir=os.path.expanduser('./logs/') + 'coco_' + '_' + str(tb_counter),
-#                          histogram_freq=0,
-#                          write_graph=True,
-#                          write_images=False)
+tb_counter  = len([log for log in os.listdir(os.path.expanduser('./logs/')) if 'coco_' in log]) + 1
+tensorboard = TensorBoard(log_dir=os.path.expanduser('./logs/') + 'coco_' + '_' + str(tb_counter),
+                          histogram_freq=0,
+                          write_graph=True,
+                          write_images=False)
 
 optimizer = Adam(lr=0.5e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 #optimizer = SGD(lr=1e-4, decay=0.0005, momentum=0.9)
@@ -154,11 +154,9 @@ model.compile(loss=custom_loss, optimizer=optimizer)
 print('len of train batch: ', len(train_batch))
 print('len of val batch: ', len(valid_batch))
 
-time.sleep(10)
-
 model.fit_generator(generator        = train_batch,
                     steps_per_epoch  = len(train_batch),
-                    epochs           = 10,
+                    epochs           = 6,
                     verbose          = 1,
                     validation_data  = valid_batch,
                     validation_steps = len(valid_batch),

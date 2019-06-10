@@ -25,3 +25,7 @@ Put your test image insied images folder and run the model.
 ![2](https://github.com/ashishkg0022/YOLOv2-keras/blob/master/output_images/test_cars_2.jpg)
 
 ![3](https://github.com/ashishkg0022/YOLOv2-keras/blob/master/output_images/test_giraffe.jpg)
+
+
+# For TinyYolov2
+https://github.com/joycex99/tiny-yolo-keras/blob/master/Tiny%20Yolo%20Keras.ipynb

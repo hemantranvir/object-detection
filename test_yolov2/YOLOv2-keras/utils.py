@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import tensorflow as tf
 import keras.backend as K
+from keras.preprocessing import image as Im
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -48,8 +49,46 @@ def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
     return scores, boxes, classes
 
 
+def yolo_non_max_suppression(scores, boxes, classes, max_boxes = 10, iou_threshold = 0.5):
+    max_boxes_tensor = K.variable(max_boxes, dtype='int32')
+    K.get_session().run(tf.variables_initializer([max_boxes_tensor]))
+
+    nms_indices = tf.image.non_max_suppression(boxes, scores, max_boxes, iou_threshold=0.5)
+    scores = K.gather(scores, nms_indices)
+    boxes = K.gather(boxes, nms_indices)
+    classes = K.gather(classes, nms_indices)
+
+    return scores, boxes, classes
+
+def yolo_eval(yolo_outputs, image_shape = (720., 1280.), max_boxes=10, score_threshold=.6, iou_threshold=.5):
+
+    box_confidence, box_xy, box_wh, box_class_probs = yolo_outputs
 
 
+    boxes = yolo_boxes_to_corners(box_xy, box_wh)
+
+    scores, boxes, classes = yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold=score_threshold)
+
+    boxes = scale_boxes(boxes, image_shape)
+
+    scores, boxes, classes = yolo_non_max_suppression(scores, boxes, classes, max_boxes=max_boxes, iou_threshold=iou_threshold)
+
+    return scores, boxes, classes
+
+def get_spaced_colors(n):
+    max_value = 255**3
+    interval = int(max_value / n)
+    colors = [hex(I)[2:].zfill(6) for I in range(100, max_value, interval)]
+
+    return [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
+
+def preprocess_test_image(img_path, model_image_size=(416,416)):
+    original_image = Im.load_img(img_path)
+    test_image = Im.load_img(img_path, target_size = model_image_size)
+    test_data = Im.img_to_array(test_image)
+    test_data /= 255.0
+    test_data = np.expand_dims(test_data, axis = 0)
+    return original_image, test_data
 
 def yolo_head(feats, anchors, num_classes):
     """Convert final layer features to bounding box parameters.
