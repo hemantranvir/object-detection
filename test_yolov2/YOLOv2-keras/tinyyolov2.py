@@ -43,8 +43,6 @@ class TinyYolov2():
         
         # Layer 9
         out = Conv2D(5 * (4 + 1 + 80), (1, 1), strides=(1, 1), padding='same', name='conv9')(x)
-        out = Activation('linear')(x)
-        out = Reshape((13, 13, 5, 4 + 1 + 80))(x)
 
         self.model = Model(inputs = input, outputs = out)
         self.model.summary()
